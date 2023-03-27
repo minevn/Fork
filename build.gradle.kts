@@ -85,7 +85,7 @@ paperweight {
 }
 
 tasks.generateDevelopmentBundle {
-    apiCoordinates.set("org.purpurmc.tentacles:tentacles-api")
+    apiCoordinates.set("net.minevn.fork:minevn-api")
     mojangApiCoordinates.set("io.papermc.paper:paper-mojangapi")
     libraryRepositories.set(
         listOf(
@@ -100,7 +100,7 @@ allprojects {
     publishing {
         repositories {
             maven("https://repo.purpurmc.org/snapshots") {
-                name = "tentacles"
+                name = "minevn"
                 credentials(PasswordCredentials::class)
             }
         }
