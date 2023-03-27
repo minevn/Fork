@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Duong Hong An <themasterclaus@gmail.com>
+Date: Mon, 27 Mar 2023 16:08:50 +0700
+Subject: [PATCH] change map update interval
+
+
+diff --git a/src/main/java/net/minecraft/world/level/saveddata/maps/MapItemSavedData.java b/src/main/java/net/minecraft/world/level/saveddata/maps/MapItemSavedData.java
+index 50348a5eec1e2ffabfc8405d708461376a162913..9bdec5920ec0e226a2daaa6c4fa85ada98e218f8 100644
+--- a/src/main/java/net/minecraft/world/level/saveddata/maps/MapItemSavedData.java
++++ b/src/main/java/net/minecraft/world/level/saveddata/maps/MapItemSavedData.java
+@@ -624,7 +624,7 @@ public class MapItemSavedData extends SavedData {
+         @Nullable
+         Packet<?> nextUpdatePacket(int mapId) {
+             MapItemSavedData.MapPatch worldmap_b;
+-            if (!this.dirtyData && this.tick % 5 != 0) { this.tick++; return null; } // Paper - this won't end up sending, so don't render it!
++            if (!this.dirtyData && this.tick % 1 != 0) { this.tick++; return null; } // Paper - this won't end up sending, so don't render it!
+             boolean vanillaMaps = shouldUseVanillaMap(); // Paper
+             org.bukkit.craftbukkit.map.RenderData render = !vanillaMaps ? MapItemSavedData.this.mapView.render((org.bukkit.craftbukkit.entity.CraftPlayer) this.player.getBukkitEntity()) : MapItemSavedData.this.vanillaRender; // CraftBukkit // Paper
+ 
+@@ -637,7 +637,7 @@ public class MapItemSavedData extends SavedData {
+ 
+             Collection collection;
+ 
+-            if ((true || this.dirtyDecorations) && this.tick++ % 5 == 0) { // CraftBukkit - custom maps don't update this yet
++            if ((true || this.dirtyDecorations) && this.tick++ % 1 == 0) { // CraftBukkit - custom maps don't update this yet
+                 this.dirtyDecorations = false;
+                 // CraftBukkit start
+                 java.util.Collection<MapDecoration> icons = new java.util.ArrayList<MapDecoration>();
