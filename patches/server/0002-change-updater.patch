@@ -1,0 +1,335 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Duong Hong An <themasterclaus@gmail.com>
+Date: Mon, 27 Mar 2023 10:58:47 +0700
+Subject: [PATCH] change updater
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 37f7247864d45d44cecd0b26f41a0ae7a50fbed7..e3270f1fd064c5e1c13ec632ddcc8dc1616773e9 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -1,4 +1,6 @@
+-import io.papermc.paperweight.util.*
++import io.papermc.paperweight.util.Git
++import io.papermc.paperweight.util.defaultJavaLauncher
++import io.papermc.paperweight.util.path
+ 
+ plugins {
+     java
+@@ -66,7 +68,7 @@ tasks.jar {
+         attributes(
+             "Main-Class" to "org.bukkit.craftbukkit.Main",
+             "Implementation-Title" to "CraftBukkit",
+-            "Implementation-Version" to "git-Purpur-$implementationVersion", // Purpur
++            "Implementation-Version" to "git-MineVN-$implementationVersion", // Purpur
+             "Implementation-Vendor" to date, // Paper
+             "Specification-Title" to "Bukkit",
+             "Specification-Version" to project.version,
+diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+index 462a6eed350fd660ddaf25d567bb6e97b77d0b2b..796d436521a34eea68723c786cf63b01e852a7cf 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
++++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+@@ -3,19 +3,20 @@ package com.destroystokyo.paper;
+ import com.destroystokyo.paper.util.VersionFetcher;
+ import com.google.common.base.Charsets;
+ import com.google.common.io.Resources;
+-import com.google.gson.*;
++import com.google.gson.Gson;
++import com.google.gson.JsonObject;
++import com.google.gson.JsonSyntaxException;
+ import net.kyori.adventure.text.Component;
+ import net.kyori.adventure.text.event.ClickEvent;
+ import net.kyori.adventure.text.format.NamedTextColor;
+-import net.kyori.adventure.text.format.TextDecoration;
+-import net.kyori.adventure.text.TextComponent;
+ 
+ import javax.annotation.Nonnull;
+ import javax.annotation.Nullable;
+-import java.io.*;
++import java.io.BufferedReader;
++import java.io.IOException;
++import java.io.InputStreamReader;
+ import java.net.HttpURLConnection;
+ import java.net.URL;
+-import java.util.stream.StreamSupport;
+ 
+ public class PaperVersionFetcher implements VersionFetcher {
+     private static final java.util.regex.Pattern VER_PATTERN = java.util.regex.Pattern.compile("^([0-9\\.]*)\\-.*R"); // R is an anchor, will always give '-R' at end
+@@ -33,8 +34,8 @@ public class PaperVersionFetcher implements VersionFetcher {
+     @Nonnull
+     @Override
+     public Component getVersionMessage(@Nonnull String serverVersion) {
+-        String[] parts = serverVersion.substring("git-Purpur-".length()).split("[-\\s]"); // Purpur
+-        final Component updateMessage = getUpdateStatusMessage("PurpurMC/Purpur", "ver/" + getMinecraftVersion(), parts[0]); // Purpur
++        String[] parts = serverVersion.substring("git-MineVN-".length()).split("[-\\s]"); // Purpur // MineVN
++        final Component updateMessage = getUpdateStatusMessage("MineVN/Fork", "ver/" + getMinecraftVersion(), parts[0]); // Purpur // MineVN
+         final Component history = getHistory();
+ 
+         return history != null ? Component.join(net.kyori.adventure.text.JoinConfiguration.separator(Component.newline()), history, updateMessage) : updateMessage; // Purpur
+@@ -58,6 +59,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+ 
+     private static Component getUpdateStatusMessage(@Nonnull String repo, @Nonnull String branch, @Nonnull String versionInfo) {
+         //int distance; // Purpur - use field
++        /* // MineVN start - disable jenkins/api checking
+         try {
+             int jenkinsBuild = Integer.parseInt(versionInfo);
+             distance = fetchDistanceFromSiteApi(jenkinsBuild, getMinecraftVersion());
+@@ -65,6 +67,10 @@ public class PaperVersionFetcher implements VersionFetcher {
+             versionInfo = versionInfo.replace("\"", "");
+             distance = fetchDistanceFromGitHub(repo, branch, versionInfo);
+         }
++        */
++        versionInfo = versionInfo.replace("\"", "");
++        distance = fetchDistanceFromGitHub(repo, branch, versionInfo);
++        // MineVN end
+ 
+         switch (distance) {
+             case -1:
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index fd51c0dcd6c56311fb5cea5fdcb2bbb730bc6571..431aac4915027532fdc4062d7c9b3e50c374273a 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -16,31 +16,7 @@ import com.mojang.datafixers.util.Pair;
+ import com.mojang.serialization.DynamicOps;
+ import com.mojang.serialization.Lifecycle;
+ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+-import java.awt.image.BufferedImage;
+-import java.io.ByteArrayOutputStream;
+-import java.io.File;
+-import java.io.FileInputStream;
+-import java.io.FileNotFoundException;
+-import java.io.IOException;
+-import java.io.InputStreamReader;
+-import java.util.ArrayList;
+-import java.util.Collections;
+-import java.util.HashMap;
+-import java.util.HashSet;
+-import java.util.Iterator;
+-import java.util.LinkedHashMap;
+-import java.util.LinkedHashSet;
+-import java.util.List;
+-import java.util.Locale;
+-import java.util.Map;
+-import java.util.Optional;
+-import java.util.Set;
+-import java.util.UUID;
+-import java.util.function.Consumer;
+-import java.util.logging.Level;
+-import java.util.logging.Logger;
+-import java.util.stream.Collectors;
+-import javax.imageio.ImageIO;
++import net.md_5.bungee.api.chat.BaseComponent;
+ import net.minecraft.advancements.Advancement;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
+@@ -66,11 +42,7 @@ import net.minecraft.server.dedicated.DedicatedServerSettings;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.server.level.TicketType;
+-import net.minecraft.server.players.IpBanListEntry;
+-import net.minecraft.server.players.PlayerList;
+-import net.minecraft.server.players.ServerOpListEntry;
+-import net.minecraft.server.players.UserBanListEntry;
+-import net.minecraft.server.players.UserWhiteListEntry;
++import net.minecraft.server.players.*;
+ import net.minecraft.tags.TagKey;
+ import net.minecraft.util.GsonHelper;
+ import net.minecraft.util.datafix.DataFixers;
+@@ -111,35 +83,12 @@ import net.minecraft.world.level.storage.WorldData;
+ import net.minecraft.world.level.storage.loot.LootTables;
+ import net.minecraft.world.phys.Vec3;
+ import org.apache.commons.lang.Validate;
+-import org.bukkit.BanList;
+-import org.bukkit.Bukkit;
+-import org.bukkit.ChatColor;
+-import org.bukkit.GameMode;
+-import org.bukkit.Keyed;
+-import org.bukkit.Location;
+-import org.bukkit.NamespacedKey;
+-import org.bukkit.OfflinePlayer;
+-import org.bukkit.Registry;
+-import org.bukkit.Server;
+-import org.bukkit.StructureType;
+-import org.bukkit.UnsafeValues;
++import org.bukkit.*;
+ import org.bukkit.Warning.WarningState;
+-import org.bukkit.World;
+ import org.bukkit.World.Environment;
+-import org.bukkit.WorldBorder;
+-import org.bukkit.WorldCreator;
+ import org.bukkit.block.data.BlockData;
+-import org.bukkit.boss.BarColor;
+-import org.bukkit.boss.BarFlag;
+-import org.bukkit.boss.BarStyle;
+-import org.bukkit.boss.BossBar;
+-import org.bukkit.boss.KeyedBossBar;
+-import org.bukkit.command.Command;
+-import org.bukkit.command.CommandException;
+-import org.bukkit.command.CommandSender;
+-import org.bukkit.command.ConsoleCommandSender;
+-import org.bukkit.command.PluginCommand;
+-import org.bukkit.command.SimpleCommandMap;
++import org.bukkit.boss.*;
++import org.bukkit.command.*;
+ import org.bukkit.configuration.ConfigurationSection;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.bukkit.configuration.serialization.ConfigurationSerialization;
+@@ -155,19 +104,7 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
+ import org.bukkit.craftbukkit.generator.CraftWorldInfo;
+ import org.bukkit.craftbukkit.generator.OldCraftChunkData;
+ import org.bukkit.craftbukkit.help.SimpleHelpMap;
+-import org.bukkit.craftbukkit.inventory.CraftBlastingRecipe;
+-import org.bukkit.craftbukkit.inventory.CraftCampfireRecipe;
+-import org.bukkit.craftbukkit.inventory.CraftFurnaceRecipe;
+-import org.bukkit.craftbukkit.inventory.CraftItemFactory;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.craftbukkit.inventory.CraftMerchantCustom;
+-import org.bukkit.craftbukkit.inventory.CraftRecipe;
+-import org.bukkit.craftbukkit.inventory.CraftShapedRecipe;
+-import org.bukkit.craftbukkit.inventory.CraftShapelessRecipe;
+-import org.bukkit.craftbukkit.inventory.CraftSmithingRecipe;
+-import org.bukkit.craftbukkit.inventory.CraftSmokingRecipe;
+-import org.bukkit.craftbukkit.inventory.CraftStonecuttingRecipe;
+-import org.bukkit.craftbukkit.inventory.RecipeIterator;
++import org.bukkit.craftbukkit.inventory.*;
+ import org.bukkit.craftbukkit.inventory.util.CraftInventoryCreator;
+ import org.bukkit.craftbukkit.map.CraftMapColorCache;
+ import org.bukkit.craftbukkit.map.CraftMapView;
+@@ -184,13 +121,7 @@ import org.bukkit.craftbukkit.tag.CraftBlockTag;
+ import org.bukkit.craftbukkit.tag.CraftEntityTag;
+ import org.bukkit.craftbukkit.tag.CraftFluidTag;
+ import org.bukkit.craftbukkit.tag.CraftItemTag;
+-import org.bukkit.craftbukkit.util.CraftChatMessage;
+-import org.bukkit.craftbukkit.util.CraftIconCache;
+-import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+-import org.bukkit.craftbukkit.util.CraftNamespacedKey;
+-import org.bukkit.craftbukkit.util.CraftSpawnCategory;
+-import org.bukkit.craftbukkit.util.DatFileFilter;
+-import org.bukkit.craftbukkit.util.Versioning;
++import org.bukkit.craftbukkit.util.*;
+ import org.bukkit.craftbukkit.util.permissions.CraftDefaultPermissions;
+ import org.bukkit.entity.Entity;
+ import org.bukkit.entity.Player;
+@@ -206,35 +137,13 @@ import org.bukkit.generator.BiomeProvider;
+ import org.bukkit.generator.ChunkGenerator;
+ import org.bukkit.generator.WorldInfo;
+ import org.bukkit.help.HelpMap;
+-import org.bukkit.inventory.BlastingRecipe;
+-import org.bukkit.inventory.CampfireRecipe;
+-import org.bukkit.inventory.ComplexRecipe;
+-import org.bukkit.inventory.FurnaceRecipe;
+-import org.bukkit.inventory.Inventory;
+-import org.bukkit.inventory.InventoryHolder;
+-import org.bukkit.inventory.InventoryView;
+-import org.bukkit.inventory.ItemStack;
+-import org.bukkit.inventory.Merchant;
+-import org.bukkit.inventory.Recipe;
+-import org.bukkit.inventory.ShapedRecipe;
+-import org.bukkit.inventory.ShapelessRecipe;
+-import org.bukkit.inventory.SmithingRecipe;
+-import org.bukkit.inventory.SmithingTransformRecipe;
+-import org.bukkit.inventory.SmithingTrimRecipe;
+-import org.bukkit.inventory.SmokingRecipe;
+-import org.bukkit.inventory.StonecuttingRecipe;
++import org.bukkit.inventory.*;
+ import org.bukkit.loot.LootTable;
+ import org.bukkit.map.MapPalette;
+ import org.bukkit.map.MapView;
+ import org.bukkit.permissions.Permissible;
+ import org.bukkit.permissions.Permission;
+-import org.bukkit.plugin.Plugin;
+-import org.bukkit.plugin.PluginLoadOrder;
+-import org.bukkit.plugin.PluginManager;
+-import org.bukkit.plugin.ServicesManager;
+-import org.bukkit.plugin.SimplePluginManager;
+-import org.bukkit.plugin.SimpleServicesManager;
+-import org.bukkit.plugin.java.JavaPluginLoader;
++import org.bukkit.plugin.*;
+ import org.bukkit.plugin.messaging.Messenger;
+ import org.bukkit.plugin.messaging.StandardMessenger;
+ import org.bukkit.potion.Potion;
+@@ -250,13 +159,19 @@ import org.yaml.snakeyaml.Yaml;
+ import org.yaml.snakeyaml.constructor.SafeConstructor;
+ import org.yaml.snakeyaml.error.MarkedYAMLException;
+ 
+-import net.md_5.bungee.api.chat.BaseComponent; // Spigot
+-
+-import javax.annotation.Nullable; // Paper
+-import javax.annotation.Nonnull; // Paper
++import javax.annotation.Nonnull;
++import javax.annotation.Nullable;
++import javax.imageio.ImageIO;
++import java.awt.image.BufferedImage;
++import java.io.*;
++import java.util.*;
++import java.util.function.Consumer;
++import java.util.logging.Level;
++import java.util.logging.Logger;
++import java.util.stream.Collectors;
+ 
+ public final class CraftServer implements Server {
+-    private final String serverName = "Purpur"; // Paper // Purpur
++    private final String serverName = "MineVN"; // Paper // Purpur // MineVN
+     private final String serverVersion;
+     private final String bukkitVersion = Versioning.getBukkitVersion();
+     private final Logger logger = Logger.getLogger("Minecraft");
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+index fb87620c742ff7912f5e8ccd2a7930dd605576d9..4e56f8d64c168e6d5fc52b687547249fe5214e83 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+@@ -1,17 +1,18 @@
+ package org.bukkit.craftbukkit.util;
+ 
++import org.bukkit.Bukkit;
++
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.util.Properties;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+-import org.bukkit.Bukkit;
+ 
+ public final class Versioning {
+     public static String getBukkitVersion() {
+         String result = "Unknown-Version";
+ 
+-        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/org.purpurmc.purpur/purpur-api/pom.properties"); // Purpur
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/org.purpurmc.purpur/minevn-api/pom.properties"); // Purpur // MineVN
+         Properties properties = new Properties();
+ 
+         if (stream != null) {
+diff --git a/src/main/java/org/purpurmc/purpur/PurpurConfig.java b/src/main/java/org/purpurmc/purpur/PurpurConfig.java
+index 0bcbe1f07ff8e552d2abd6e432af5710005acc04..355a7e0d902a1d4260ad630f36644f83437a08df 100644
+--- a/src/main/java/org/purpurmc/purpur/PurpurConfig.java
++++ b/src/main/java/org/purpurmc/purpur/PurpurConfig.java
+@@ -1,6 +1,5 @@
+ package org.purpurmc.purpur;
+ 
+-import co.aikar.timings.TimingsManager;
+ import com.google.common.base.Throwables;
+ import com.google.common.collect.ImmutableMap;
+ import com.mojang.datafixers.util.Pair;
+@@ -30,13 +29,7 @@ import java.io.IOException;
+ import java.lang.reflect.InvocationTargetException;
+ import java.lang.reflect.Method;
+ import java.lang.reflect.Modifier;
+-import java.util.ArrayList;
+-import java.util.Collections;
+-import java.util.HashMap;
+-import java.util.HashSet;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Set;
++import java.util.*;
+ import java.util.logging.Level;
+ 
+ @SuppressWarnings("unused")
+@@ -227,7 +220,7 @@ public class PurpurConfig {
+         deathMessageOnlyBroadcastToAffectedPlayer = getBoolean("settings.broadcasts.death.only-broadcast-to-affected-player", deathMessageOnlyBroadcastToAffectedPlayer);
+     }
+ 
+-    public static String serverModName = "Purpur";
++    public static String serverModName = "MineVN"; // MineVN
+     private static void serverModName() {
+         serverModName = getString("settings.server-mod-name", serverModName);
+     }
