@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Duong Hong An <themasterclaus@gmail.com>
+Date: Mon, 27 Mar 2023 16:12:27 +0700
+Subject: [PATCH] still run async if chunk loaded
+
+
+diff --git a/src/main/java/net/minecraft/server/level/ServerChunkCache.java b/src/main/java/net/minecraft/server/level/ServerChunkCache.java
+index 30d364b385da21544a810a76f436f06879d39b14..2fbfdbcfb2109c0f64f8e54a3312fae9123d7121 100644
+--- a/src/main/java/net/minecraft/server/level/ServerChunkCache.java
++++ b/src/main/java/net/minecraft/server/level/ServerChunkCache.java
+@@ -420,7 +420,7 @@ public class ServerChunkCache extends ChunkSource {
+     @Override
+     public ChunkAccess getChunk(int x, int z, ChunkStatus leastStatus, boolean create) {
+         final int x1 = x; final int z1 = z; // Paper - conflict on variable change
+-        if (!io.papermc.paper.util.TickThread.isTickThread()) { // Paper - rewrite chunk system
++        if (!io.papermc.paper.util.TickThread.isTickThread() && false) { // Paper - rewrite chunk system
+             return (ChunkAccess) CompletableFuture.supplyAsync(() -> {
+                 return this.getChunk(x, z, leastStatus, create);
+             }, this.mainThreadProcessor).join();
+@@ -429,6 +429,11 @@ public class ServerChunkCache extends ChunkSource {
+             LevelChunk ifLoaded = this.getChunkAtIfLoadedMainThread(x, z);
+             if (ifLoaded != null) {
+                 return ifLoaded;
++            } else if (!io.papermc.paper.util.TickThread.isTickThread()) { // MineVN - move to main thread
++                return (ChunkAccess) CompletableFuture.supplyAsync(() -> {
++                    return this.getChunk(x, z, leastStatus, create);
++                }, this.mainThreadProcessor).join();
++                // MineVN end
+             }
+             // Paper end
+             //ProfilerFiller gameprofilerfiller = this.level.getProfiler(); // Purpur
