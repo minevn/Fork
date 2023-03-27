@@ -1,4 +1,4 @@
-import java.util.Locale
+import java.util.*
 
 pluginManagement {
     repositories {
@@ -27,7 +27,7 @@ if (!file(".git").exists()) {
     error(errorText)
 }
 
-rootProject.name = "tentacles"
+rootProject.name = "minevn-fork"
 
 for (name in listOf("MineVN-API", "MineVN-Server")) {
     val projName = name.toLowerCase(Locale.ENGLISH)
