@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Duong Hong An <themasterclaus@gmail.com>
+Date: Mon, 27 Mar 2023 10:34:33 +0700
+Subject: [PATCH] rebrand
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 761bee802da0d3616ba0739434261b14a030805d..37f7247864d45d44cecd0b26f41a0ae7a50fbed7 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -7,7 +7,7 @@ plugins {
+ }
+ 
+ dependencies {
+-    implementation(project(":purpur-api")) // Purpur
++    implementation(project(":minevn-api")) // Purpur
+     implementation("io.papermc.paper:paper-mojangapi:1.19.4-R0.1-SNAPSHOT") // Purpur
+     // Paper start
+     implementation("org.jline:jline-terminal-jansi:3.21.0")
