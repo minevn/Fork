@@ -18,10 +18,10 @@ index e6cc2bab1fde2e8c1394772b99201ea8d7eb8057..fa76d4f0b468222aa994707ec0178dfc
  
      public static record Favicon(byte[] iconBytes) {
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index be8bb3f48971e76a3637b9da0706281f352c318b..db248ec5936bacba06df3e58987453352c54ac6a 100644
+index 82402be7bbbf04388339c6a471946a72f09dfe3b..ba42a6201ec96d0827fbb0891cc7687b6c2b482d 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2091,7 +2091,7 @@ public class ServerPlayer extends Player {
+@@ -2093,7 +2093,7 @@ public class ServerPlayer extends Player {
      }
  
      public void sendServerStatus(ServerStatus metadata) {
@@ -31,10 +31,10 @@ index be8bb3f48971e76a3637b9da0706281f352c318b..db248ec5936bacba06df3e5898745335
  
      @Override
 diff --git a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-index 7254d62f3713113027eba29853e9d975eab15f7f..deeac01dfd487577b70458f9f050736605fd0bc7 100644
+index af8cb1f1f0c128923495f51e4828003133ce766b..e641d7e5e29e84bc5c3110890d6c0d40d43bfa6a 100644
 --- a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-@@ -2234,10 +2234,31 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
+@@ -2235,10 +2235,31 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
  
      @Override
      public void send(Packet<?> packet) {
@@ -67,10 +67,10 @@ index 7254d62f3713113027eba29853e9d975eab15f7f..deeac01dfd487577b70458f9f0507366
          if (packet == null || this.processedDisconnect) { // Spigot
              return;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 33d4c1af86382cc3343d5db42283b27f69f52374..ebc75a172d5c65e31f39bdea961c34140b04fac9 100644
+index c27e455321951e76e4818fec0e64301f5620dbf6..f8bd7110b3f75f23a71a07233b4818e04651e23d 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -1462,7 +1462,7 @@ public abstract class PlayerList {
+@@ -1464,7 +1464,7 @@ public abstract class PlayerList {
      }
  
      public boolean verifyChatTrusted(PlayerChatMessage message) { // Paper - private -> public
